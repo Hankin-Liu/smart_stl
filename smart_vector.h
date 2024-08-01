@@ -25,7 +25,7 @@ public:
             std::vector<T, Allocator>::push_back(value);
             return;
         }
-        realloc_insert(value);
+        realloc_insert(this->size(), value);
     }
 #if __cplusplus >= 201103L
     inline void push_back(const T&& value) {
@@ -46,7 +46,7 @@ public:
         if (this->size() != this->capacity()) {
             std::vector<T, Allocator>::emplace_back(__args...);
         } else {
-            realloc_emplace(__args...);
+            realloc_emplace(this->size(), __args...);
         }
 #if __cplusplus > 201402L
         return back();
@@ -55,12 +55,14 @@ public:
 #endif
 
 private:
-    void __attribute__ ((noinline)) realloc_insert(const T& value) {
+    void __attribute__ ((noinline)) realloc_insert(size_t current_size, const T& value) {
+        std::cout << "size = " << current_size
+            << ", this = 0x" << std::hex << this << std::endl;
         std::vector<T, Allocator>::push_back(value);
     }
 #if __cplusplus >= 201103L
     template<typename... _Args>
-    void __attribute__ ((noinline)) realloc_emplace(_Args&&... __args) {
+    void __attribute__ ((noinline)) realloc_emplace(size_t current_size, _Args&&... __args) {
         std::vector<T, Allocator>::emplace_back(__args...);
     }
 #endif
