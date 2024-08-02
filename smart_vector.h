@@ -55,14 +55,12 @@ public:
 #endif
 
 private:
-    void __attribute__ ((noinline)) realloc_insert(size_t current_size, const T& value) {
-        std::cout << "size = " << current_size
-            << ", this = 0x" << std::hex << this << std::endl;
+    void __attribute__ ((noinline)) realloc_insert(volatile size_t current_size, const T& value) {
         std::vector<T, Allocator>::push_back(value);
     }
 #if __cplusplus >= 201103L
     template<typename... _Args>
-    void __attribute__ ((noinline)) realloc_emplace(size_t current_size, _Args&&... __args) {
+    void __attribute__ ((noinline)) realloc_emplace(volatile size_t current_size, _Args&&... __args) {
         std::vector<T, Allocator>::emplace_back(__args...);
     }
 #endif
