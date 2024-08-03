@@ -44,9 +44,9 @@ public:
       emplace_back(_Args&&... __args)
       {
         if (this->size() != this->capacity()) {
-            std::vector<T, Allocator>::emplace_back(__args...);
+            std::vector<T, Allocator>::emplace_back(std::forward<_Args>(__args)...);
         } else {
-            realloc_emplace(this->size(), __args...);
+            realloc_emplace(this->size(), std::forward<_Args>(__args)...);
         }
 #if __cplusplus > 201402L
         return back();
@@ -55,17 +55,17 @@ public:
 #endif
 
 private:
-    void __attribute__ ((noinline)) realloc_insert(volatile size_t current_size, const T& value) {
+    void __attribute__ ((noinline)) realloc_insert(volatile size_t current_size, const T& value)
+    {
         std::vector<T, Allocator>::push_back(value);
     }
 #if __cplusplus >= 201103L
     template<typename... _Args>
-    void __attribute__ ((noinline)) realloc_emplace(volatile size_t current_size, _Args&&... __args) {
-        std::vector<T, Allocator>::emplace_back(__args...);
+    void __attribute__ ((noinline)) realloc_emplace(volatile size_t current_size, _Args&&... __args)
+    {
+        std::vector<T, Allocator>::emplace_back(std::forward<_Args>(__args)...);
     }
 #endif
-
-private:
 };
 
 }
