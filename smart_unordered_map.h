@@ -44,6 +44,54 @@ public:
         realloc_insert(BASE::size(), ret_, __x);
         return ret_;
     }
+
+    inline std::pair<typename BASE::iterator, bool>
+    insert(const typename BASE::value_type&& __x)
+    {
+        if (! need_rehash()) {
+            return BASE::insert(std::move(__x));
+        }
+        realloc_insert(BASE::size(), ret_, std::move(__x));
+        return ret_;
+    }
+
+    inline typename BASE::mapped_type& operator[](const typename BASE::key_type& __k)
+    {
+        if (! need_rehash()) {
+            return BASE::operator [](__k);
+        }
+        typename BASE::mapped_type* ptr{ nullptr };
+        bool is_realloc = realloc_operator(__k, ptr);
+        return *ptr;
+    }
+
+    inline typename BASE::mapped_type& operator[](const typename BASE::key_type&& __k)
+    {
+        if (! need_rehash()) {
+            return BASE::operator [](std::move(__k));
+        }
+        typename BASE::mapped_type* ptr{ nullptr };
+        bool is_realloc = realloc_operator(std::move(__k), ptr);
+        return *ptr;
+    }
+
+    inline void reserve(typename BASE::size_type __n)
+    {
+        BASE::reserve(__n);
+        update_threshold();
+    }
+
+    inline void rehash(typename BASE::size_type __n)
+    {
+        BASE::rehash(__n);
+        update_threshold();
+    }
+
+    inline void max_load_factor(float __z)
+    {
+        BASE::max_load_factor(__z);
+        update_threshold();
+    }
 private:
     inline bool need_rehash()
     {
@@ -51,11 +99,11 @@ private:
     }
     inline void update_threshold()
     {
-        //std::cout << "before realloc_threshold_ = " << realloc_threshold_ << std::endl;
+        std::cout << "before realloc_threshold_ = " << realloc_threshold_ << std::endl;
         realloc_threshold_ = BASE::bucket_count() * BASE::max_load_factor();
-        //std::cout << "end realloc_threshold_ = " << realloc_threshold_ << std::endl;
+        std::cout << "end realloc_threshold_ = " << realloc_threshold_ << std::endl;
     }
-    bool __attribute__ ((noinline)) realloc_insert(volatile size_t current_size, std::pair<typename BASE::iterator, bool>& ret, const typename BASE::value_type& value)
+    bool __attribute__ ((noinline)) realloc_insert(volatile size_t current_size, std::pair<typename BASE::iterator, bool>& ret, const typename BASE::value_type&& value)
     {
         ret = BASE::insert(value);
         if (ret.second) {
@@ -70,6 +118,18 @@ private:
             update_threshold();
         }
         return ret.second;
+    }
+
+    bool realloc_operator(const typename BASE::key_type& __k, typename BASE::mapped_type*& ptr)
+    {
+        auto start_bucket_cnt = BASE::bucket_count();
+        auto& ret = BASE::operator [](__k);
+        ptr = &ret;
+        if (BASE::bucket_count() != start_bucket_cnt) {
+            update_threshold();
+            return true;
+        }
+        return false;
     }
 private:
     std::pair<typename BASE::iterator, bool> ret_{};
