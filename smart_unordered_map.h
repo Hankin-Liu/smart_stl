@@ -120,7 +120,7 @@ private:
         return ret.second;
     }
 
-    bool__attribute__ ((noinline)) realloc_operator(const typename BASE::key_type& __k, typename BASE::mapped_type*& ptr)
+    bool __attribute__ ((noinline)) realloc_operator(const typename BASE::key_type& __k, typename BASE::mapped_type*& ptr)
     {
         auto start_bucket_cnt = BASE::bucket_count();
         auto& ret = BASE::operator [](__k);
