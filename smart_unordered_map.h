@@ -41,7 +41,6 @@ public:
         if (! need_rehash()) {
             return BASE::insert(__x);
         }
-            std::cout << "insert" << std::endl;
         realloc_insert(BASE::size(), ret_, __x);
         return ret_;
     }
@@ -52,9 +51,9 @@ private:
     }
     inline void update_threshold()
     {
-        std::cout << "before realloc_threshold_ = " << realloc_threshold_ << std::endl;
+        //std::cout << "before realloc_threshold_ = " << realloc_threshold_ << std::endl;
         realloc_threshold_ = BASE::bucket_count() * BASE::max_load_factor();
-        std::cout << "end realloc_threshold_ = " << realloc_threshold_ << std::endl;
+        //std::cout << "end realloc_threshold_ = " << realloc_threshold_ << std::endl;
     }
     bool __attribute__ ((noinline)) realloc_insert(volatile size_t current_size, std::pair<typename BASE::iterator, bool>& ret, const typename BASE::value_type& value)
     {
