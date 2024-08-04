@@ -9,6 +9,7 @@
 #define SMART_STL_VECTOR
 
 #include <vector>
+#include <cassert>
 
 namespace smart_stl
 {
@@ -57,12 +58,14 @@ public:
 private:
     void __attribute__ ((noinline)) realloc_insert(volatile size_t current_size, const T& value)
     {
+        assert(current_size == this->size());
         std::vector<T, Allocator>::push_back(value);
     }
 #if __cplusplus >= 201103L
     template<typename... _Args>
     void __attribute__ ((noinline)) realloc_emplace(volatile size_t current_size, _Args&&... __args)
     {
+        assert(current_size == this->size());
         std::vector<T, Allocator>::emplace_back(std::forward<_Args>(__args)...);
     }
 #endif
