@@ -41,7 +41,7 @@ public:
         if (! need_rehash()) {
             return BASE::insert(__x);
         }
-        realloc_insert(BASE::size(), ret_, __x);
+        realloc_insert(this->size(), ret_, __x);
         return ret_;
     }
 
@@ -51,7 +51,7 @@ public:
         if (! need_rehash()) {
             return BASE::insert(std::move(__x));
         }
-        realloc_insert(BASE::size(), ret_, std::move(__x));
+        realloc_insert(this->size(), ret_, std::move(__x));
         return ret_;
     }
 
@@ -61,7 +61,7 @@ public:
             return BASE::operator [](__k);
         }
         typename BASE::mapped_type* ptr{ nullptr };
-        bool is_realloc = realloc_operator(__k, ptr);
+        bool is_realloc = realloc_operator(this->size(), __k, ptr);
         return *ptr;
     }
 
@@ -71,7 +71,7 @@ public:
             return BASE::operator [](std::move(__k));
         }
         typename BASE::mapped_type* ptr{ nullptr };
-        bool is_realloc = realloc_operator(std::move(__k), ptr);
+        bool is_realloc = realloc_operator(this->size(), std::move(__k), ptr);
         return *ptr;
     }
 
@@ -95,7 +95,7 @@ public:
 private:
     inline bool need_rehash()
     {
-        return (BASE::size() + 1 >= realloc_threshold_);
+        return (this->size() + 1 >= realloc_threshold_);
     }
     inline void update_threshold()
     {
@@ -106,27 +106,33 @@ private:
     bool __attribute__ ((noinline)) realloc_insert(volatile size_t current_size, std::pair<typename BASE::iterator, bool>& ret, const typename BASE::value_type&& value)
     {
         ret = BASE::insert(value);
-        if (ret.second) {
+        if (ret.second
+            || BASE::size() > current_size) { // only avoid compiler optimized the current_size
             update_threshold();
+            //std::cout << this << ", current_size = " << current_size << std::endl;
         }
         return ret.second;
     }
     template<typename... _Args>
     bool __attribute__ ((noinline)) realloc_emplace(volatile size_t current_size, std::pair<typename BASE::iterator, bool>& ret, _Args&&... __args) {
         ret = BASE::emplace(std::forward<_Args>(__args)...);
-        if (ret.second) {
+        if (ret.second
+            || BASE::size() > current_size) { // only avoid compiler optimized the current_size
             update_threshold();
+            //std::cout << this << ", current_size = " << current_size << std::endl;
         }
         return ret.second;
     }
 
-    bool __attribute__ ((noinline)) realloc_operator(const typename BASE::key_type& __k, typename BASE::mapped_type*& ptr)
+    bool __attribute__ ((noinline)) realloc_operator(volatile size_t current_size, const typename BASE::key_type& __k, typename BASE::mapped_type*& ptr)
     {
         auto start_bucket_cnt = BASE::bucket_count();
         auto& ret = BASE::operator [](__k);
         ptr = &ret;
-        if (BASE::bucket_count() != start_bucket_cnt) {
+        if (BASE::bucket_count() != start_bucket_cnt
+            || BASE::size() > current_size) { // only avoid compiler optimized the current_size
             update_threshold();
+            //std::cout << this << ", current_size = " << current_size << std::endl;
             return true;
         }
         return false;
