@@ -9,6 +9,7 @@
 #define SMART_STL_UNORDERED_MAP
 
 #include <unordered_map>
+#include <cassert>
 
 namespace smart_stl
 {
@@ -105,9 +106,9 @@ private:
     }
     bool __attribute__ ((noinline)) realloc_insert(volatile size_t current_size, std::pair<typename BASE::iterator, bool>& ret, const typename BASE::value_type&& value)
     {
+        assert(current_size == this->size());
         ret = BASE::insert(value);
-        if (ret.second
-            || BASE::size() > current_size) { // only avoid compiler optimized the current_size
+        if (ret.second) {
             update_threshold();
             //std::cout << this << ", current_size = " << current_size << std::endl;
         }
@@ -115,9 +116,9 @@ private:
     }
     template<typename... _Args>
     bool __attribute__ ((noinline)) realloc_emplace(volatile size_t current_size, std::pair<typename BASE::iterator, bool>& ret, _Args&&... __args) {
+        assert(current_size == this->size());
         ret = BASE::emplace(std::forward<_Args>(__args)...);
-        if (ret.second
-            || BASE::size() > current_size) { // only avoid compiler optimized the current_size
+        if (ret.second) {
             update_threshold();
             //std::cout << this << ", current_size = " << current_size << std::endl;
         }
@@ -126,11 +127,11 @@ private:
 
     bool __attribute__ ((noinline)) realloc_operator(volatile size_t current_size, const typename BASE::key_type& __k, typename BASE::mapped_type*& ptr)
     {
+        assert(current_size == this->size());
         auto start_bucket_cnt = BASE::bucket_count();
         auto& ret = BASE::operator [](__k);
         ptr = &ret;
-        if (BASE::bucket_count() != start_bucket_cnt
-            || BASE::size() > current_size) { // only avoid compiler optimized the current_size
+        if (BASE::bucket_count() != start_bucket_cnt) {
             update_threshold();
             //std::cout << this << ", current_size = " << current_size << std::endl;
             return true;
